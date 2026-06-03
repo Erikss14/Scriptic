@@ -6,7 +6,6 @@ local HttpService = game:GetService("HttpService")
 
 -- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
 local success, RoactSource = pcall(function()
-    -- FULL PATH FIXED: This points directly to the real, functional Roact source script
     return game:HttpGet("https://githubusercontent.com")
 end)
 
@@ -42,8 +41,6 @@ function ScripticApp:init()
 		toasts = {},
 		hoverTip = nil,
 		spinnerAngle = 0,
-		
-		-- Feature states (The checkmark memory)
 		autoFarmEnabled = false
 	})
 end
@@ -221,12 +218,11 @@ function ScripticApp:Toasts()
 	}, list)
 end
 
---// INTERACTIVE CONTENT TAB ENGINE
+--// DYNAMIC PAGE LAYOUT SYSTEM
 function ScripticApp:Content()
 	local currentTab = self.state.tab
 	
 	if currentTab == "AutoFarm" then
-		-- Create a visual button on the screen that flips between active and disabled states
 		return Roact.createElement("TextButton", {
 			Size = UDim2.new(0, 220, 0, 45),
 			BackgroundColor3 = self.state.autoFarmEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(55, 55, 55),
@@ -238,24 +234,23 @@ function ScripticApp:Content()
 			[Roact.Event.Activated] = function()
 				local nextState = not self.state.autoFarmEnabled
 				self:setState({ autoFarmEnabled = nextState })
-				self:pushToast(nextState and "Activated Tracker Framework" or "Deactivated Tracker Framework")
+				self:pushToast(nextState and "Activated Tracking State" or "Deactivated Tracking State")
 			end
 		}, {
 			UICorner = Roact.createElement("UICorner", { CornerRadius = UDim.new(0, 6) })
 		})
 		
 	elseif currentTab == "Settings" then
-		-- Create a functional button to unmount and destroy the UI frame smoothly
 		return Roact.createElement("TextButton", {
 			Size = UDim2.new(0, 200, 0, 40),
 			BackgroundColor3 = Color3.fromRGB(220, 60, 60),
-			Text = "❌ Close Scriptic Window",
+			Text = "❌ Close Scriptic Screen",
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			Font = Enum.Font.GothamBold,
 			TextSize = 13,
 			BorderSizePixel = 0,
 			[Roact.Event.Activated] = function()
-				self:pushToast("Closing console layout...")
+				self:pushToast("Unmounting layout frame...")
 				task.delay(0.4, function()
 					local coreGui = game:GetService("CoreGui")
 					local hubFrame = coreGui:FindFirstChild("ScripticV3")
@@ -266,10 +261,9 @@ function ScripticApp:Content()
 			UICorner = Roact.createElement("UICorner", { CornerRadius = UDim.new(0, 6) })
 		})
 	else
-		-- Layout frame placeholder for other tabs
 		return Roact.createElement("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 30),
-			Text = "Framework Content Window — Selection layout is ready.",
+			Text = "Framework View Layer — Interactive tab configurations are ready.",
 			TextColor3 = Color3.fromRGB(140, 140, 140),
 			Font = Enum.Font.Gotham,
 			TextSize = 13,
@@ -330,7 +324,7 @@ function ScripticApp:render()
 			
 			HeaderTitle = Roact.createElement("TextLabel", {
 				Size = UDim2.new(1, 0, 0, 20),
-				Text = "Scriptic Hub — " .. self.state.tab,
+				Text = "Scriptic Hub — Menu Tab: " .. self.state.tab,
 				TextColor3 = Color3.fromRGB(240, 240, 240),
 				Font = Enum.Font.GothamBold,
 				TextSize = 16,
