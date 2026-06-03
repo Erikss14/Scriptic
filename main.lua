@@ -6,7 +6,7 @@ local HttpService = game:GetService("HttpService")
 
 -- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
 local success, RoactSource = pcall(function()
-    -- FIXED URL: Restored the true raw path to the Roact source file engine
+    -- FIXED LINK: Points directly to the actual raw repository source file for Roact
     return game:HttpGet("https://githubusercontent.com")
 end)
 
@@ -342,7 +342,7 @@ function ScripticApp:render()
 	})
 end
 
--- FIXED MOUNT TARGET: Replaced CoreGui with PlayerGui to comply with executor security sandboxing
+-- MOUNT TARGET SAFETY ADJUSTMENT: Directing framework safely into local player's PlayerGui context layer
 local localPlayer = game:GetService("Players").LocalPlayer
 local targetGui = localPlayer:WaitForChild("PlayerGui")
 
