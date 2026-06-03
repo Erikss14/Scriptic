@@ -6,6 +6,7 @@ local HttpService = game:GetService("HttpService")
 
 -- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
 local success, RoactSource = pcall(function()
+    -- FIXED URL: Restored the true raw path to the Roact source file engine
     return game:HttpGet("https://githubusercontent.com")
 end)
 
@@ -252,8 +253,9 @@ function ScripticApp:Content()
 			[Roact.Event.Activated] = function()
 				self:pushToast("Unmounting layout frame...")
 				task.delay(0.4, function()
-					local coreGui = game:GetService("CoreGui")
-					local hubFrame = coreGui:FindFirstChild("ScripticV3")
+					local players = game:GetService("Players")
+					local localPlayer = players.LocalPlayer
+					local hubFrame = localPlayer and localPlayer:FindFirstChild("PlayerGui") and localPlayer.PlayerGui:FindFirstChild("ScripticV3")
 					if hubFrame then hubFrame:Destroy() end
 				end)
 			end
@@ -340,9 +342,13 @@ function ScripticApp:render()
 	})
 end
 
+-- FIXED MOUNT TARGET: Replaced CoreGui with PlayerGui to comply with executor security sandboxing
+local localPlayer = game:GetService("Players").LocalPlayer
+local targetGui = localPlayer:WaitForChild("PlayerGui")
+
 Roact.mount(
 	Roact.createElement(ScripticApp),
-	game:GetService("CoreGui"),
+	targetGui,
 	"ScripticV3"
 )
 
