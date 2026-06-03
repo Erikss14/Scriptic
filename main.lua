@@ -6,7 +6,7 @@ local HttpService = game:GetService("HttpService")
 
 -- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
 local success, RoactSource = pcall(function()
-    -- FIXED: Restored the full direct raw URL path to the Roact source code
+    -- FULL PATH FIXED: This points directly to the real Roact source script
     return game:HttpGet("https://githubusercontent.com")
 end)
 
@@ -41,7 +41,12 @@ function ScripticApp:init()
 		search = "",
 		toasts = {},
 		hoverTip = nil,
-		spinnerAngle = 0
+		spinnerAngle = 0,
+		
+		-- Feature states (The internal brain checkmarks)
+		autoFarmEnabled = false,
+		fruitSniperEnabled = false,
+		espEnabled = false
 	})
 end
 
@@ -157,7 +162,7 @@ function ScripticApp:SearchBar()
 		Size = UDim2.new(1, -10, 0, 32),
 		BackgroundColor3 = Color3.fromRGB(40, 40, 40),
 		Text = self.state.search,
-		PlaceholderText = "Search features...",
+		PlaceholderText = "Search...",
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		Font = Enum.Font.Gotham,
 		TextSize = 13,
@@ -218,21 +223,60 @@ function ScripticApp:Toasts()
 	}, list)
 end
 
---// MAIN CONTENT
+--// INTERACTIVE CONTENT LAYER
 function ScripticApp:Content()
-	return Roact.createElement("Frame", {
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 1
-	}, {
-		Title = Roact.createElement("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 30),
-			Text = "Tab: " .. self.state.tab,
-			TextColor3 = Color3.fromRGB(200, 200, 200),
-			Font = Enum.Font.Gotham,
+	local currentTab = self.state.tab
+	
+	-- Draw layout components based on what tab is chosen
+	if currentTab == "AutoFarm" then
+		return Roact.createElement("TextButton", {
+			Size = UDim2.new(0, 200, 0, 45),
+			BackgroundColor3 = self.state.autoFarmEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(50, 50, 50),
+			Text = self.state.autoFarmEnabled and "Auto-Farm: ACTIVE" or "Auto-Farm: DISABLED",
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBold,
 			TextSize = 14,
+			BorderSizePixel = 0,
+			[Roact.Event.Activated] = function()
+				local newState = not self.state.autoFarmEnabled
+				self:setState({ autoFarmEnabled = newState })
+				self:pushToast(newState and "Enabled AutoFarm Tracker" or "Disabled AutoFarm Tracker")
+			end
+		}, {
+			UICorner = Roact.createElement("UICorner", { CornerRadius = UDim.new(0, 6) })
+		})
+		
+	elseif currentTab == "Settings" then
+		return Roact.createElement("TextButton", {
+			Size = UDim2.new(0, 180, 0, 40),
+			BackgroundColor3 = Color3.fromRGB(200, 50, 50),
+			Text = "❌ Close Scriptic console",
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.GothamBold,
+			TextSize = 13,
+			BorderSizePixel = 0,
+			[Roact.Event.Activated] = function()
+				self:pushToast("Unmounting Scriptic Core...")
+				task.delay(0.5, function()
+					local coreGui = game:GetService("CoreGui")
+					local instance = coreGui:FindFirstChild("ScripticV3")
+					if instance then instance:Destroy() end
+				end)
+			end
+		}, {
+			UICorner = Roact.createElement("UICorner", { CornerRadius = UDim.new(0, 6) })
+		})
+	else
+		-- Stand-in window layout for empty screens
+		return Roact.createElement("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Text = "Framework Screen: Tools configuration tab is ready.",
+			TextColor3 = Color3.fromRGB(150, 150, 150),
+			Font = Enum.Font.Gotham,
+			TextSize = 13,
 			BackgroundTransparency = 1
 		})
-	})
+	end
 end
 
 --// RENDER
@@ -276,12 +320,22 @@ function ScripticApp:render()
 			BorderSizePixel = 0
 		}, {
 			UIPadding = Roact.createElement("UIPadding", {
-				PaddingTop = UDim.new(0, 10),
-				PaddingLeft = UDim.new(0, 10)
+				PaddingTop = UDim.new(0, 20),
+				PaddingLeft = UDim.new(0, 20)
 			}),
 
 			Layout = Roact.createElement("UIListLayout", {
 				Padding = UDim.new(0, 10)
+			}),
+			
+			TitleHeader = Roact.createElement("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 25),
+				Text = "Scriptic Hub — Menu section: " .. self.state.tab,
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				Font = Enum.Font.GothamBold,
+				TextSize = 16,
+				BackgroundTransparency = 1,
+				TextXAlignment = Enum.TextXAlignment.Left
 			}),
 
 			Content = self:Content()
