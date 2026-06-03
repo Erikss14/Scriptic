@@ -1,33 +1,300 @@
--- THE MAIN CONTROLLER THAT RUNS EVERYTHING
-print("Loading Script Framework...")
+--// Scriptic UI v3 (Roact - INTERNET BOOTSTRAPPED EDITION)
+--// Automatically fetches the Roact engine from the cloud to prevent ReplicatedStorage errors.
 
--- 1. Linking your folder's modules together
-local SaveModule = require(script.Parent.datastore)
-local TrackModule = require(script.Parent.tracker)
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
--- 2. Setting up baseline variables
-local myUserId = 123456
-local autoFarmActive = true
-
--- Save our startup setting using our datastore file
-SaveModule.Save(myUserId, "AutoFarm", autoFarmActive)
-
--- 3. A loop simulating checking the game environment
-task.spawn(function()
-    while true do
-        task.wait(2.0) -- Wait 2 seconds before checking again
-        
-        if autoFarmActive then
-            -- Pretend these are live coordinates in the game world
-            local playerPosition = 0 
-            local enemyPosition = 12 -- The enemy is 12 studs away
-            
-            -- Use our tracker file to see if the enemy is close enough to hit
-            local isClose = TrackModule.CheckDistance(playerPosition, enemyPosition)
-            
-            if isClose then
-                print("Action: Automatically interacting with target!")
-            end
-        end
-    end
+-- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
+local success, RoactSource = pcall(function()
+    return game:HttpGet("https://githubusercontent.com")
 end)
+
+if not success or not RoactSource then
+    error("[Scriptic Error]: Failed to fetch the core Roact engine from the cloud. Execution halted.")
+end
+
+-- Translate the plain internet text into a live executable module
+local function loadModule(source)
+    local func, err = loadstring(source)
+    if not func then error("[Scriptic Engine Error]: " .. tostring(err)) end
+    return func()
+end
+
+local Roact = loadModule(RoactSource)
+
+-- STEP 2: YOUR SCRIPTIC APP LOGIC
+local ScripticApp = Roact.Component:extend("ScripticApp")
+
+local Icons = {
+	AutoFarm = "⚔️",
+	Teleports = "🌀",
+	Fruit = "🍎",
+	ESP = "👁️",
+	Settings = "⚙️"
+}
+
+function ScripticApp:init()
+	self:setState({
+		tab = "AutoFarm",
+		loading = true,
+		search = "",
+		toasts = {},
+		hoverTip = nil,
+		spinnerAngle = 0
+	})
+end
+
+--// Spinner animation loop
+function ScripticApp:didMount()
+	task.spawn(function()
+		while self.state.loading do
+			self:setState({
+				spinnerAngle = (self.state.spinnerAngle + 10) % 360
+			})
+			task.wait(0.03)
+		end
+	end)
+
+	task.delay(1.5, function()
+		self:setState({ loading = false })
+	end)
+end
+
+--// Toast system
+function ScripticApp:pushToast(text)
+	local toasts = table.clone(self.state.toasts)
+
+	table.insert(toasts, {
+		id = tick(),
+		text = text
+	})
+
+	self:setState({ toasts = toasts })
+
+	task.delay(2.5, function()
+		local new = {}
+		for _, t in ipairs(self.state.toasts) do
+			if t.id ~= toasts[#toasts].id then
+				table.insert(new, t)
+			end
+		end
+		self:setState({ toasts = new })
+	end)
+end
+
+function ScripticApp:setTab(tab)
+	self:setState({ tab = tab })
+	self:pushToast("Opened " .. tab)
+end
+
+--// SEARCH FILTER
+function ScripticApp:isVisible(tab)
+	if self.state.search == "" then
+		return true
+	end
+	return string.find(string.lower(tab), string.lower(self.state.search)) ~= nil
+end
+
+--// TOOLTIP
+function ScripticApp:Tooltip(text)
+	if not text then return nil end
+
+	return Roact.createElement("TextLabel", {
+		Size = UDim2.new(0, 200, 0, 28),
+		Position = UDim2.new(1, 8, 0, 0),
+		BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+		Text = text,
+		TextColor3 = Color3.fromRGB(200, 200, 200),
+		Font = Enum.Font.Gotham,
+		TextSize = 12,
+		BorderSizePixel = 0
+	}, {
+		UICorner = Roact.createElement("UICorner", {
+			CornerRadius = UDim.new(0, 6)
+		})
+	})
+end
+
+--// SIDEBAR BUTTON
+function ScripticApp:SidebarButton(tab)
+	local active = self.state.tab == tab
+
+	if not self:isVisible(tab) then
+		return nil
+	end
+
+	return Roact.createElement("TextButton", {
+		Size = UDim2.new(1, -10, 0, 40),
+		BackgroundColor3 = active and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(35, 35, 35),
+		Text = Icons[tab],
+		TextSize = 20,
+		Font = Enum.Font.GothamBold,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BorderSizePixel = 0,
+
+		[Roact.Event.MouseEnter] = function()
+			self:setState({ hoverTip = tab })
+		end,
+
+		[Roact.Event.MouseLeave] = function()
+			self:setState({ hoverTip = nil })
+		end,
+
+		[Roact.Event.Activated] = function()
+			self:setTab(tab)
+		end
+	}, {
+		UICorner = Roact.createElement("UICorner", {
+			CornerRadius = UDim.new(0, 6)
+		})
+	})
+end
+
+--// SEARCH BAR
+function ScripticApp:SearchBar()
+	return Roact.createElement("TextBox", {
+		Size = UDim2.new(1, -10, 0, 32),
+		BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+		Text = self.state.search,
+		PlaceholderText = "Search features...",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		Font = Enum.Font.Gotham,
+		TextSize = 13,
+		BorderSizePixel = 0,
+
+		[Roact.Change.Text] = function(rbx)
+			self:setState({ search = rbx.Text })
+		end
+	}, {
+		UICorner = Roact.createElement("UICorner", {
+			CornerRadius = UDim.new(0, 6)
+		})
+	})
+end
+
+--// LOADING SCREEN
+function ScripticApp:Loading()
+	return Roact.createElement("Frame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+	}, {
+		Spinner = Roact.createElement("TextLabel", {
+			Size = UDim2.new(1, 0, 1, 0),
+			Text = "⏳ Loading Scriptic...",
+			TextColor3 = Color3.fromRGB(0, 170, 255),
+			Font = Enum.Font.GothamBold,
+			TextSize = 18,
+			BackgroundTransparency = 1,
+			Rotation = self.state.spinnerAngle
+		})
+	})
+end
+
+--// TOASTS
+function ScripticApp:Toasts()
+	local list = {}
+
+	for i, t in ipairs(self.state.toasts) do
+		list["Toast" .. i] = Roact.createElement("TextLabel", {
+			Size = UDim2.new(0, 220, 0, 30),
+			Text = t.text,
+			BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			Font = Enum.Font.Gotham,
+			TextSize = 13,
+			BorderSizePixel = 0
+		}, {
+			UICorner = Roact.createElement("UICorner", {
+				CornerRadius = UDim.new(0, 6)
+			})
+		})
+	end
+
+	return Roact.createElement("Frame", {
+		Size = UDim2.new(0, 240, 1, 0),
+		Position = UDim2.new(1, -250, 0, 10),
+		BackgroundTransparency = 1
+	}, list)
+end
+
+--// MAIN CONTENT
+function ScripticApp:Content()
+	return Roact.createElement("Frame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1
+	}, {
+		Title = Roact.createElement("TextLabel", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Text = "Tab: " .. self.state.tab,
+			TextColor3 = Color3.fromRGB(200, 200, 200),
+			Font = Enum.Font.Gotham,
+			TextSize = 14,
+			BackgroundTransparency = 1
+		})
+	})
+end
+
+--// RENDER
+function ScripticApp:render()
+	if self.state.loading then
+		return self:Loading()
+	end
+
+	return Roact.createElement("Frame", {
+		Size = UDim2.new(0, 860, 0, 520),
+		Position = UDim2.new(0.5, -430, 0.5, -260),
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		BorderSizePixel = 0
+	}, {
+		UICorner = Roact.createElement("UICorner", {
+			CornerRadius = UDim.new(0, 10)
+		}),
+
+		Sidebar = Roact.createElement("Frame", {
+			Size = UDim2.new(0, 70, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+			BorderSizePixel = 0
+		}, {
+			Layout = Roact.createElement("UIListLayout", {
+				Padding = UDim.new(0, 8)
+			}),
+
+			Search = self:SearchBar(),
+
+			AutoFarm = self:SidebarButton("AutoFarm"),
+			Teleports = self:SidebarButton("Teleports"),
+			Fruit = self:SidebarButton("Fruit"),
+			ESP = self:SidebarButton("ESP"),
+			Settings = self:SidebarButton("Settings"),
+		}),
+
+		Main = Roact.createElement("Frame", {
+			Position = UDim2.new(0, 70, 0, 0),
+			Size = UDim2.new(1, -70, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+			BorderSizePixel = 0
+		}, {
+			UIPadding = Roact.createElement("UIPadding", {
+				PaddingTop = UDim.new(0, 10),
+				PaddingLeft = UDim.new(0, 10)
+			}),
+
+			Layout = Roact.createElement("UIListLayout", {
+				Padding = UDim.new(0, 10)
+			}),
+
+			Content = self:Content()
+		}),
+
+		Tooltip = self:Tooltip(self.state.hoverTip),
+		Toasts = self:Toasts()
+	})
+end
+
+Roact.mount(
+	Roact.createElement(ScripticApp),
+	game:GetService("CoreGui"),
+	"ScripticV3"
+)
+
+print("[Scriptic]: UI v3 Loaded via Internet Bootstrapper")
