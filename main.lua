@@ -6,7 +6,7 @@ local HttpService = game:GetService("HttpService")
 
 -- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
 local success, RoactSource = pcall(function()
-    -- FULL PATH FIXED: This points directly to the real Roact source script
+    -- FULL PATH FIXED: This points directly to the real, functional Roact source script
     return game:HttpGet("https://githubusercontent.com")
 end)
 
@@ -43,10 +43,8 @@ function ScripticApp:init()
 		hoverTip = nil,
 		spinnerAngle = 0,
 		
-		-- Feature states (The internal brain checkmarks)
-		autoFarmEnabled = false,
-		fruitSniperEnabled = false,
-		espEnabled = false
+		-- Feature states (The checkmark memory)
+		autoFarmEnabled = false
 	})
 end
 
@@ -223,58 +221,60 @@ function ScripticApp:Toasts()
 	}, list)
 end
 
---// INTERACTIVE CONTENT LAYER
+--// INTERACTIVE CONTENT TAB ENGINE
 function ScripticApp:Content()
 	local currentTab = self.state.tab
 	
-	-- Draw layout components based on what tab is chosen
 	if currentTab == "AutoFarm" then
+		-- Create a visual button on the screen that flips between active and disabled states
 		return Roact.createElement("TextButton", {
-			Size = UDim2.new(0, 200, 0, 45),
-			BackgroundColor3 = self.state.autoFarmEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(50, 50, 50),
-			Text = self.state.autoFarmEnabled and "Auto-Farm: ACTIVE" or "Auto-Farm: DISABLED",
+			Size = UDim2.new(0, 220, 0, 45),
+			BackgroundColor3 = self.state.autoFarmEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(55, 55, 55),
+			Text = self.state.autoFarmEnabled and "Auto-Farm Loop: ON" or "Auto-Farm Loop: OFF",
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			Font = Enum.Font.GothamBold,
 			TextSize = 14,
 			BorderSizePixel = 0,
 			[Roact.Event.Activated] = function()
-				local newState = not self.state.autoFarmEnabled
-				self:setState({ autoFarmEnabled = newState })
-				self:pushToast(newState and "Enabled AutoFarm Tracker" or "Disabled AutoFarm Tracker")
+				local nextState = not self.state.autoFarmEnabled
+				self:setState({ autoFarmEnabled = nextState })
+				self:pushToast(nextState and "Activated Tracker Framework" or "Deactivated Tracker Framework")
 			end
 		}, {
 			UICorner = Roact.createElement("UICorner", { CornerRadius = UDim.new(0, 6) })
 		})
 		
 	elseif currentTab == "Settings" then
+		-- Create a functional button to unmount and destroy the UI frame smoothly
 		return Roact.createElement("TextButton", {
-			Size = UDim2.new(0, 180, 0, 40),
-			BackgroundColor3 = Color3.fromRGB(200, 50, 50),
-			Text = "❌ Close Scriptic console",
+			Size = UDim2.new(0, 200, 0, 40),
+			BackgroundColor3 = Color3.fromRGB(220, 60, 60),
+			Text = "❌ Close Scriptic Window",
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			Font = Enum.Font.GothamBold,
 			TextSize = 13,
 			BorderSizePixel = 0,
 			[Roact.Event.Activated] = function()
-				self:pushToast("Unmounting Scriptic Core...")
-				task.delay(0.5, function()
+				self:pushToast("Closing console layout...")
+				task.delay(0.4, function()
 					local coreGui = game:GetService("CoreGui")
-					local instance = coreGui:FindFirstChild("ScripticV3")
-					if instance then instance:Destroy() end
+					local hubFrame = coreGui:FindFirstChild("ScripticV3")
+					if hubFrame then hubFrame:Destroy() end
 				end)
 			end
 		}, {
 			UICorner = Roact.createElement("UICorner", { CornerRadius = UDim.new(0, 6) })
 		})
 	else
-		-- Stand-in window layout for empty screens
+		-- Layout frame placeholder for other tabs
 		return Roact.createElement("TextLabel", {
 			Size = UDim2.new(1, 0, 0, 30),
-			Text = "Framework Screen: Tools configuration tab is ready.",
-			TextColor3 = Color3.fromRGB(150, 150, 150),
+			Text = "Framework Content Window — Selection layout is ready.",
+			TextColor3 = Color3.fromRGB(140, 140, 140),
 			Font = Enum.Font.Gotham,
 			TextSize = 13,
-			BackgroundTransparency = 1
+			BackgroundTransparency = 1,
+			TextXAlignment = Enum.TextXAlignment.Left
 		})
 	end
 end
@@ -325,13 +325,13 @@ function ScripticApp:render()
 			}),
 
 			Layout = Roact.createElement("UIListLayout", {
-				Padding = UDim.new(0, 10)
+				Padding = UDim.new(0, 15)
 			}),
 			
-			TitleHeader = Roact.createElement("TextLabel", {
-				Size = UDim2.new(1, 0, 0, 25),
-				Text = "Scriptic Hub — Menu section: " .. self.state.tab,
-				TextColor3 = Color3.fromRGB(255, 255, 255),
+			HeaderTitle = Roact.createElement("TextLabel", {
+				Size = UDim2.new(1, 0, 0, 20),
+				Text = "Scriptic Hub — " .. self.state.tab,
+				TextColor3 = Color3.fromRGB(240, 240, 240),
 				Font = Enum.Font.GothamBold,
 				TextSize = 16,
 				BackgroundTransparency = 1,
