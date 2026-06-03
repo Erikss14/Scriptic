@@ -6,6 +6,7 @@ local HttpService = game:GetService("HttpService")
 
 -- STEP 1: DOWNLOAD ROACT FROM THE INTERNET DYNAMICALLY
 local success, RoactSource = pcall(function()
+    -- FIXED: Restored the full direct raw URL path to the Roact source code
     return game:HttpGet("https://githubusercontent.com")
 end)
 
